@@ -1,7 +1,7 @@
 ﻿using ConsoleApp17;
 using Microsoft.Extensions.Configuration;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Connectors.AI.OpenAI;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 IConfigurationRoot config = new ConfigurationBuilder()
     .AddEnvironmentVariables()
@@ -13,20 +13,17 @@ string modelId = config["OpenAI:ModelId"] ?? throw new InvalidOperationException
 string endpoint = config["OpenAI:Endpoint"] ?? throw new InvalidOperationException("OpenAI:BaseUrl is not set.");
 string key = config["OpenAI:Key"] ?? throw new InvalidOperationException("OpenAI:Key is not set.");
 
-KernelBuilder builder = new();
-
-
-builder.Services.AddAzureOpenAIChatCompletion(
+Kernel kernel = Kernel.CreateBuilder()
+ .AddAzureOpenAIChatCompletion(
     deploymentName,
-    modelId,
     endpoint, 
-    key);
-builder.Plugins.AddFromType<Plugin>();
+    key).Build();
+kernel.Plugins.AddFromType<Plugin>();
 
-Kernel kernel = builder.Build();
 OpenAIPromptExecutionSettings? setting = new()
 {
-    FunctionCallBehavior = FunctionCallBehavior.AutoInvokeKernelFunctions
+    ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+    //FunctionCallBehavior = FunctionCallBehavior.AutoInvokeKernelFunctions
 };
 
 while (true)
